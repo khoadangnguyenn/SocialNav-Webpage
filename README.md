@@ -1,11 +1,13 @@
 # SocialWalker: Learning a Social Compliance Cost from Web-Scale Human Walking Videos for Plug-and-Play Robot Navigation
 ---
 ![Teaser Figure](./static/images/overview_paper.png)
+
 ---
-This repository contains the source code for the **SocialWalker** project website. SocialWalker is a framework that learns a social compliance cost directly from large-scale human walking videos without requiring manual social annotations or robot-collected interaction data.
----
+
 The site available at `https://khoadangnguyenn.github.io/SocialNav-Webpage/`.
+
 ---
+
 ## 📁 Repository Structure
 
 ```

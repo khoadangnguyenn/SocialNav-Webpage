@@ -4,8 +4,8 @@
 
 This repository contains the source code for the **SocialWalker** project website. SocialWalker is a framework that learns a social compliance cost directly from large-scale human walking videos without requiring manual social annotations or robot-collected interaction data.
 
-**Conference**: CoRL 2026
-
+The site available at `https://khoadangnguyenn.github.io/SocialNav-Webpage/`.
+ 
 ## 🚀 Quick Start
 
 To view the website locally, simply open `index.html` in your web browser, or start a local HTTP server:
@@ -27,38 +27,12 @@ SocialNav-Webpage/
     ├── css/
     │   ├── bulma.min.css       # Bulma CSS framework
     │   ├── fontawesome.all.min.css
-    │   └── social-nav-vlm.css  # Custom CSS for SocialWalker homepage
+    │   └── social-nav-vlm.css  # Custom CSS
     ├── js/
-    │   └── social-nav-vlm.js   # Custom JavaScript (GSAP animations, carousels)
+    │   └── social-nav-vlm.js   # Custom JavaScript
     ├── images/                 # Project images and figures
     └── video/                  # Demo videos
 ```
-
-## 🎨 Features & Technologies
-
-The website is built with a focus on modern, engaging, and premium design to showcase the SocialWalker research effectively:
-
-- **AOS (Animate On Scroll) & GSAP**: Used for smooth scroll-triggered animations and fluid transitions.
-- **Glassmorphism UI**: Premium visual effects for cards and navigation elements.
-- **Custom Interactive Carousels**: Custom-built, responsive carousels for showcasing figures and implementation steps without relying on buggy external slider libraries.
-- **Bulma CSS**: A lightweight flexbox-based framework for responsive layouts.
-- **Academicons & FontAwesome**: High-quality icons for academic links (arXiv, Paper, GitHub, YouTube).
-
-## ✏️ How to Update Content
-
-If you need to update the paper details before final release, you can modify `index.html`:
-- **Paper Info**: Update title, authors, affiliations, and links (PDF, arXiv, Video, Code) in the `hero-section`.
-- **Abstract & Text**: Modify the paragraphs in the `#abstract-section` and `#overview-section`.
-- **Images**: Replace the images in `static/images/` with the final figures while keeping the same file names, or update the `src` paths in the HTML.
-- **Tables**: Results are hard-coded in standard HTML tables in `#tables-section`.
-
-## 📄 Deployment (GitHub Pages)
-
-To publish this website for the public:
-1. Push this repository to GitHub.
-2. Go to **Settings** → **Pages**.
-3. Set the source branch to `main` (and folder to `/root`).
-4. The site will be available at `https://<yourusername>.github.io/<repository-name>/`.
 
 ## 📝 License
 

@@ -1,0 +1,519 @@
+     SocialWalker: Learning a Social Compliance Cost from Web-Scale
+        Human Walking Videos for Plug-and-Play Robot Navigation
+
+
+
+   Abstract— Robots navigating in crowded environments must
+exhibit socially compliant behavior, yet designing explicit social
+cost functions remains challenging due to the complexity and
+variability of human interactions. We present SocialWalker, a
+framework that learns a social compliance cost directly from
+large-scale human walking videos without requiring manual
+social annotations or robot-collected interaction data. Our ap-
+proach extracts ego trajectories and pedestrian proximity cues
+from internet videos to construct an ego-centric representation
+of social navigation. By treating the observed human trajectory
+as expert behavior and perturbed trajectories as negatives, we
+train a temporal ranking model to estimate a social compliance
+score for candidate robot trajectories. At deployment, the
+learned social cost is integrated into a classical navigation
+stack through a plug-and-play min-cost selection scheme that
+combines goal cost, geometric cost, and the learned social cost.
+Experiments in the Arena simulation framework show that
+SocialWalker significantly reduces collision rates and improves      Fig. 1: Overview of SocialWalker. Web-scale human walking videos are
+social compliance metrics while maintaining comparable nav-          used to extract ego trajectories and pedestrian interaction cues. A temporal
+igation efficiency. These results demonstrate the potential of       model learns a social compliance cost that evaluates candidate robot
+leveraging large-scale human video data as a scalable source of      trajectories. During deployment, the learned cost is integrated into the
+                                                                     navigation stack in a plug-and-play manner to guide trajectory selection.
+supervision for socially aware robot navigation.
+                                                                     Compared with geometric planning alone, SocialWalker generates smoother
+                       I. Introduction                               and more socially compliant behaviors when navigating among pedestrians.
+
+   Robots operating in human environments must navigate in
+a socially compliant manner. Beyond reaching a goal without
+collision, socially aware navigation requires respecting per-           In this paper, we address this gap by presenting Social-
+sonal space, avoiding abrupt motions near pedestrians, and           Walker, a framework that learns a social compliance cost
+implicitly following social norms [1], [2]. While classical          from human walking videos and integrates it into classical
+navigation systems [3], [4] optimize geometric and goal-             navigation stacks in a plug-and-play manner, as illustrated
+oriented objectives, they often fail to capture subtle human         in Fig. 1. Instead of predicting control commands or learn-
+interaction dynamics, leading to behavior that appears safe          ing end-to-end navigation policies, SocialWalker learns a
+but socially inappropriate [5], [6].                                 trajectory-level ranking function that evaluates candidate
+   Designing explicit social cost functions remains chal-            trajectories produced by classical planners. This design pre-
+lenging due to the complexity and variability of human               serves the modular structure of existing navigation stacks
+interactions. Hand-crafted rules based on distance thresholds        while enabling learned social reasoning during trajectory
+or velocity constraints [2], [7] often fail to generalize across     selection, allowing socially compliant behavior to be incorpo-
+diverse environments and crowd densities. Reinforcement              rated without modifying the underlying planner architecture.
+learning approaches [8], [9] require extensive interaction              We construct a data pipeline that extracts ego trajectories
+data or carefully designed reward functions, which may               using visual odometry [14] and estimates pedestrian prox-
+still encode limited social priors. Moreover, collecting large-      imity cues via detection and depth estimation. From these
+scale robot-human interaction data is expensive and time-            signals, we build an ego-centric social state representation
+consuming.                                                           capturing ego motion and top-K pedestrian proximity fea-
+   In contrast, vast amounts of human walking behavior are           tures.
+freely available in web-scale videos [10], [11], providing              We treat the observed human trajectory as expert behavior
+a scalable and largely underexplored source of supervision           and generate augmented trajectory candidates as negatives.
+for learning socially compliant navigation behavior. These           A temporal encoder is trained using a ranking objective
+videos implicitly encode rich social navigation priors, as hu-       to assign lower cost to socially compliant trajectories. At
+mans naturally adapt their motion in crowded environments.           deployment, we inject the learned cost into the local planner’s
+However, directly learning control policies from raw RGB             trajectory scoring as an additional term, allowing seamless
+videos [12] introduces domain gaps and high-dimensional              integration with existing local planners without modifying
+perception challenges [13].                                          their internal structure.
+   Extensive experiments in simulation demonstrate that So-        [25], [26], [27], [28], [29]. However, these methods often
+cialWalker improves socially compliant behavior while pre-         incur high inference latency, delayed control responses and less
+serving navigation performance. Our approach provides a            smooth motion execution. In addition, they typically require
+scalable mechanism for transferring social navigation priors       large-scale datasets for training or policy refinement [30].
+from web-scale human data to robot navigation systems.                In contrast to learning full control policies, our approach
+   The main contributions of this work are:                        learns a trajectory-level social compliance cost, which pre-
+   • A scalable pipeline that mines social navigation priors       serves the modular structure of classical planners and enables
+     from web-scale human walking videos without manual            plug-and-play integration.
+     social annotations.
+   • A trajectory-level temporal ranking model that learns         C. Learning from Human Videos
+     a social compliance cost from ego-centric social state
+                                                                      Large-scale human behavior captured in internet videos
+     representations.
+                                                                   provides a rich but underutilized source of social interaction
+   • A plug-and-play integration strategy that injects the
+                                                                   priors. Recent works in computer vision have explored learning
+     learned social cost into classical min-cost trajectory
+                                                                   motion patterns and affordances from human-centric video
+     selection without modifying the underlying planner.
+                                                                   datasets [10], [11], [31], [32]. In robotics, datasets such
+                     II. Related Work                              as UrbanNav [33] and CityWalker [34] provide structured
+A. Socially Aware Navigation                                       human trajectory benchmarks for navigation-related tasks.
+                                                                   However, most existing methods focus on trajectory prediction
+   Socially aware navigation has been widely studied in            or perception tasks, rather than extracting navigation cost
+robotics to enable safe and human-friendly motion in crowded       functions for robot planning.
+environments [2], [15]. Early approaches rely on hand-crafted
+                                                                      Instead of learning policies directly from RGB sequences,
+social cost functions, such as personal space modeling, social
+                                                                   we extract structured ego trajectories and pedestrian proximity
+force models, and reciprocal collision avoidance methods [1],
+                                                                   cues from web-scale walking videos. This representation
+[2], [16]. These methods augment classical navigation stacks
+                                                                   reduces domain gaps and allows learning a socially grounded
+by penalizing trajectories that violate interpersonal distance
+                                                                   trajectory ranking function without requiring manual social
+or generate abrupt motion near pedestrians. While effective
+                                                                   annotations.
+in structured settings, rule-based formulations often require
+careful tuning and struggle to generalize across diverse crowd
+                                                                   D. Cost Learning and Planner Integration
+densities and interaction patterns.
+   More recent works incorporate human-aware cost layers into         Several works have explored learning cost or reward func-
+local planners, embedding social penalties directly into trajec-   tions for motion planning, including inverse reinforcement
+tory scoring functions [7], [4]. Although these approaches         learning and maximum entropy formulations [35], [36], [37].
+improve behavior in specific scenarios, they still depend on       These approaches aim to recover latent cost functions from
+manually engineered heuristics that may not capture complex        expert demonstrations. However, most prior methods rely on
+and context-dependent human interactions.                          structured robotic datasets and do not address large-scale
+                                                                   human video data as a supervision source.
+B. Learning-Based Social Navigation
+                                                                      Our work differs in two key aspects. First, we mine expert
+   Learning-based approaches aim to overcome manual cost           trajectories from unconstrained web-scale human walking
+design by directly learning navigation policies from data.         videos rather than controlled robotic demonstrations. Second,
+Reinforcement learning methods optimize navigation policies        instead of recovering a full reward model or policy, we for-
+through interaction with simulated crowds, often leveraging        mulate social navigation as a trajectory-level ranking problem
+reward shaping to encourage social compliance [8], [9], [17],      over candidate motions.
+[18], [19]. However, RL-based methods typically require large-        At deployment, the learned social compliance cost is
+scale simulation, carefully designed reward functions, and may     injected into the existing trajectory scoring mechanism of
+suffer from sim-to-real gaps [13], [20].                           classical planners [3], [4] as an additional cost term. The final
+   Imitation learning approaches learn navigation behaviors        trajectory is selected by augmenting the planner objective with
+from expert demonstrations, either from robot trajectories         the learned social cost (see Sec. III-A), enabling seamless inte-
+or human-operated platforms [21], [22], [23]. While im-            gration without modifying the internal optimization structure
+itation reduces the need for reward engineering, collect-          of the underlying planner.
+ing high-quality robot-human interaction data remains ex-
+pensive. Moreover, many learning-based methods predict                                      III. Method
+control commands end-to-end from raw sensory inputs
+[12], [24], leading to reduced interpretability and limited           SocialWalker learns a trajectory-level social compliance
+compatibility with classical navigation pipelines. Recent          cost from human walking videos and integrates it into a
+approaches increasingly leverage foundational multimodal           classical navigation framework. Figure 2 illustrates the overall
+models, such as Vision–Language Models (VLMs) and Vi-              SocialWalker pipeline, including data preparation, ranking-
+sion–Language–Action models (VLAs) for robot navigation            based learning, and deployment in the navigation stack.
+Fig. 2: Overview of the SocialWalker framework for learning and deploying a trajectory-level social compliance cost. Data Preparation: Web-scale human
+walking videos are processed to extract ego trajectories and pedestrian proximity features via visual odometry, detection, and depth estimation, forming an
+ego-centric state representation. Training: A temporal encoder learns a social compliance cost by ranking expert trajectories against augmented negative
+trajectories. Deployment: The learned cost is integrated into a classical navigation stack in a plug-and-play manner, scoring local planner trajectory
+candidates and selecting the minimum-cost trajectory without modifying the underlying planner. sys
+
+
+
+                                                                               We collect a diverse set of egocentric walking footage from
+                                                                               publicly available sources, such as tourist vlogs and street-
+                                                                               level recordings that capture natural pedestrian interactions
+                                                                               in crowded environments. These videos exhibit common
+                                                                               human navigation behaviors, including avoiding oncoming
+                                                                               pedestrians, overtaking slower walkers, and maneuvering
+                                                                               through dense pedestrian flows. In total, we curate 5,000 video
+                                                                               clips from publicly available sources, each with a maximum
+                                                                               duration of 2 minutes. The videos are sampled at 1 FPS to
+                                                                               reduce redundancy while preserving meaningful motion and
+                                                                               interaction dynamics.
+Fig. 3: Training sample construction from human walking videos. (a)               For each clip, ego trajectories are estimated using DPVO
+Pedestrian detection with monocular depth estimation from a video frame,
+providing ego-centric interaction cues. (b) Ego-centric trajectory represen-   [14]. Pedestrians are detected using YOLOv10 [38]. Monoc-
+tation used for ranking-based learning. The past ego motion history 𝐸 is       ular depth estimation is performed using DepthAnything V2
+shown in blue, the expert future trajectory 𝜏 + in orange, and augmented       [39] to approximate relative distances between the ego and
+negative trajectories { 𝜏 − } as dashed curves.
+                                                                               surrounding pedestrians, as illustrated in Fig. 3(a). Although
+                                                                               monocular depth estimation may introduce noise, our rep-
+A. Problem Formulation                                                         resentation primarily relies on relative distance cues rather
+                                                                               than precise metric depth, which is sufficient for capturing
+  Given a set of candidate trajectories {𝜏𝑖 }𝑖=1 𝑁
+                                                      generated
+                                                                               socially relevant interactions. From these signals, we compute
+by a local planner, the objective is to select a socially
+                                                                               ego-centric interaction features including relative angle, lateral
+compliant trajectory while preserving standard navigation
+                                                                               offset, and depth-based distance.
+goals. Classical navigation stacks typically select trajectories
+                                                                                  To construct learning instances, each clip is segmented into
+by minimizing geometric and goal-related costs:
+                                                                               temporal windows containing at least one visible pedestrian.
+                                                                               As illustrated in Fig. 3(b), each window consists of a past ego
+               𝜏 ∗ = arg min 𝐶𝑔𝑜𝑎𝑙 (𝜏𝑖 ) + 𝐶𝑔𝑒𝑜 (𝜏𝑖 ) .
+                                                     
+                           𝜏𝑖                                                  trajectory and a future trajectory segment. The observed future
+  We introduce a learned social compliance cost 𝐶𝑠𝑜𝑐𝑖𝑎𝑙 (𝜏𝑖 )                  trajectory is treated as the expert trajectory and used as the
+and extend the selection rule to                                               positive sample (𝜏 + ), implicitly encoding socially compliant
+                                                                               behavior. To simulate local planner candidates, we generate
+                                                                               16 perturbed trajectories from the future segment using lateral
+      𝜏 ∗ = arg min 𝐶𝑔𝑜𝑎𝑙 (𝜏𝑖 ) + 𝐶𝑔𝑒𝑜 (𝜏𝑖 ) + 𝛼𝐶𝑠𝑜𝑐𝑖𝑎𝑙 (𝜏𝑖 ) ,
+                                                             
+                  𝜏𝑖                                                           offsets, curvature perturbations, and goal-direction deviations.
+  where 𝛼 controls the influence of social behavior.                           These perturbed trajectories serve as augmented negatives (𝜏 − )
+  Instead of manually designing 𝐶𝑠𝑜𝑐𝑖𝑎𝑙 , we learn it from                     for ranking-based training.
+human walking videos as a trajectory-level scoring function.                      Overall, this process yields approximately 300,000 trajec-
+                                                                               tory windows and several million positive–negative ranking
+B. Data Preparation from Human Videos                                          pairs for training the model. This automatic mining pipeline
+  As illustrated in Fig. 3, our training samples are auto-                     enables learning socially grounded trajectory-level cost func-
+matically constructed from web-scale human walking videos.                     tions without requiring manual social annotations.
+C. Ego-Centric Social State Representation
+                                                                                                    exp(−𝐶+ )
+   We model the interaction context using an ego motion                                 L = − log Í 𝑁              ,
+history and the corresponding pedestrian observations over                                          𝑗=1 exp(−𝐶 𝑗 )
+a fixed past horizon.                                                    where 𝐶+ = 𝐶𝑠𝑜𝑐𝑖𝑎𝑙 (𝜏 + ) denotes the cost assigned to
+   The ego motion history is defined as                               the expert trajectory. This objective encourages the expert
+                                                                      trajectory to achieve the lowest social cost within the candidate
+                  𝐸 = {𝑒 𝑡 }𝑇𝑡=1
+                              ℎ
+                                 ,      𝑒 𝑡 = (𝑥 𝑡 , 𝑧 𝑡 ),           set and provides stable listwise supervision without requiring
+   where (𝑥 𝑡 , 𝑧 𝑡 ) denotes the ego position in the local planar    explicit social annotations.
+frame and 𝑇ℎ = 8 is the history length.                                     a) Model Architecture: The temporal encoder is de-
+   At each timestep, we retain the 𝐾 closest pedestrians to the       signed to capture interaction dynamics between ego motion,
+ego agent according to their estimated depth and represent            surrounding pedestrians, and candidate trajectories. Ego mo-
+each as                                                               tion history is encoded using a GRU to model past motion
+                                                                      patterns. Pedestrian features at each timestep are encoded using
+                         𝐾
+            𝑃𝑡 = {𝑝 𝑖,𝑡 }𝑖=1 ,      𝑝 𝑖,𝑡 = (𝑐 𝑖,𝑡 , ℎ𝑖,𝑡 , 𝑑𝑖,𝑡 ),   an MLP, and their temporal evolution is modeled with a GRU.
+                                                                      Candidate future trajectories are encoded using a separate
+   where 𝑐 𝑖,𝑡 is the normalized bounding-box center coordi-          GRU to capture their temporal motion structure.
+nate, ℎ𝑖,𝑡 is the normalized bounding-box height, and 𝑑𝑖,𝑡 is            The resulting ego, pedestrian, and trajectory embeddings are
+the estimated depth. If fewer than 𝐾 pedestrians are detected,        concatenated and passed through a two-layer MLP to produce
+zero-padding is applied.                                              the final social compliance cost. Hidden dimensions are set to
+   The pedestrian history is therefore                                64 for ego and pedestrian encoders, 96 for trajectory encoding,
+                                                                      and 128 for the fusion MLP.
+                            𝑃 = {𝑃𝑡 }𝑇𝑡=1
+                                       ℎ
+                                          .                                 b) Training Details: The dataset is split at the video
+   Given a candidate trajectory 𝜏𝑖 generated by the local             level into 80% training, 10% validation, and 10% test sets to
+planner, we represent it as a future ego motion sequence              prevent temporal leakage. All reported results are evaluated on
+                                                                      the held-out test set, while the validation set is used for model
+              𝜏𝑖 = {𝑐 𝑡(𝑖) }𝑡=1       𝑐 𝑡(𝑖) = (𝑥 𝑡(𝑖) , 𝑧 𝑡(𝑖) ),
+                            𝑇𝑓
+                                ,                                     selection and hyperparameter tuning.
+                                                                         Each training sample consists of an ego history of length
+  where 𝑇 𝑓 = 16 denotes the temporal horizon of each                 𝑇ℎ = 8 and 𝑁 candidate future trajectories of length 𝑇 𝑓 = 16.
+candidate trajectory.                                                 To prevent candidate index bias, candidate order is randomly
+  The model encodes (𝐸, 𝑃, 𝜏𝑖 ) to produce a trajectory-level         shuffled per sample during training.
+embedding, which is used to compute the social compliance                We optimize the model using the AdamW optimizer with
+cost described in Sec. III-D.                                         learning rate 1 × 10−3 and weight decay 1 × 10−4 . Training is
+D. Social Cost Learning via Temporal Ranking                          performed for 20 epochs with batch size 32. Gradient clipping
+   We model the social compliance cost as a learnable                 with threshold 1.0 is applied for stability, and automatic mixed
+trajectory-level function:                                            precision (AMP) is enabled during training.
+
+                                                                      E. Deployment in Navigation Stack
+                   𝐶𝑠𝑜𝑐𝑖𝑎𝑙 (𝜏𝑖 ) = 𝑓 𝜃 (𝐸, 𝑃, 𝜏𝑖 ),
+                                                                         During deployment, the local planner generates a set of
+    where 𝑓 𝜃 is a temporal encoder parameterized by 𝜃. Given         candidate trajectories. For each candidate trajectory 𝜏𝑖 , the ego
+the ego history 𝐸, pedestrian history 𝑃, and a candidate              motion sequence is obtained by rolling out the trajectory over
+trajectory 𝜏𝑖 , the model predicts a scalar social compliance         the prediction horizon. Pedestrian observations are provided
+score that is normalized to the range [0, 1] and interpreted as       by the perception module and used to construct the current
+the social cost 𝐶𝑠𝑜𝑐𝑖𝑎𝑙 (𝜏𝑖 ). Lower values correspond to more        interaction context.
+socially compliant trajectories.                                         Given the ego history 𝐸, pedestrian observations 𝑃, and
+    Rather than learning a continuous reward via regression, we       candidate trajectory 𝜏𝑖 , the trained model predicts the social
+formulate social cost learning as a listwise trajectory ranking       compliance cost 𝐶𝑠𝑜𝑐𝑖𝑎𝑙 (𝜏𝑖 ). The learned social cost is then
+problem. For each training sample, we construct a set of 𝑁 = 17       incorporated into the planner’s existing scoring function.
+candidate trajectories {𝜏𝑖 }𝑖=1
+                              𝑁
+                                , including one expert trajectory     The final trajectory is selected according to the augmented
+  +
+𝜏 derived from human walking behavior and 16 augmented                objective described in Sec. III-A, preserving the original
+negative trajectories {𝜏 − }.                                         planner structure and internal optimization mechanism.
+    For each candidate trajectory, the model predicts the social
+cost                                                                                         IV. Experiments
+                        𝐶𝑖 = 𝐶𝑠𝑜𝑐𝑖𝑎𝑙 (𝜏𝑖 ).                           A. Environment Setup
+   We compute a probability distribution over the 𝑁 candidate           We conduct experiments in the Arena-based crowd navi-
+trajectories using a softmax operation and optimize a cross-          gation simulation framework [40] using a TurtleBot mobile
+entropy loss with respect to the expert trajectory:                   robot. The robot navigates in a hospital floor layout containing
+                TABLE I: Overall Navigation Performance.
+ Planner   Method           Success (%) ↑   Collision (%) ↓   Time (s) ↓   Path (m) ↓
+ DRLVO     Baseline             83.3               25           127.2         34.8
+ DWB       Baseline             100                30           127.8         34.7
+ DWB       + SocialWalker        96                14           106.7         34.5
+ MPPI      Baseline              80                20            93.6         29.7
+ MPPI      + SocialWalker       100                10           111.4         34.1
+
+
+
+
+corridors, rooms, and narrow doorways that naturally induce
+diverse human–robot interaction scenarios (Fig. 4). At each
+control cycle, the local planner generates multiple candidate
+trajectories, which are evaluated using geometric and goal-                             Fig. 4: Hospital floor layout used in our experiments within the Arena
+related costs. SocialWalker introduces an additional learned                            simulation framework.
+social compliance term into the trajectory scoring function
+as an additive cost 𝛼𝐶𝑠𝑜𝑐𝑖𝑎𝑙 . Importantly, SocialWalker is                             TABLE II: Social Compliance Metrics. Higher minimum distance is better
+integrated without modifying the internal optimization process                          (↑), while lower intrusion ratio and intrusion time are better (↓).
+or architecture of the underlying planners.                                              Planner   Method           Min Dist (m) ↑   Intrusion Ratio (%) ↓   Intrusion Time (s) ↓
+                                                                                         DRLVO     Baseline             0.32                  11.1                    6.4
+      a) Baselines: We evaluate three representative naviga-                             DWB       Baseline             0.33                  17.0                    9.7
+                                                                                         DWB       + SocialWalker       0.40                   8.7                    6.1
+tion planners: the Dynamic Window Based (DWB) planner [3],                               MPPI      Baseline             0.46                  14.1                    9.8
+the Model Predictive Path Integral (MPPI) controller [41], and                           MPPI      + SocialWalker       0.43                   5.6                    7.1
+
+the learning-based DRLVO planner [42]. For DWB and MPPI,
+we compare two configurations: (1) the original baseline using
+only geometric and goal-related costs, and (2) the same planner                            1) Overall Navigation Performance: Table I summarizes
+augmented with the SocialWalker cost. DRLVO is included as                              the overall navigation performance across different planners.
+an additional baseline but is not modified by SocialWalker.                             Integrating SocialWalker significantly improves navigation
+      b) Interaction Scenarios: We evaluate performance un-                             safety while maintaining comparable task performance.
+der five structured human–robot interaction scenarios com-                                 For the DWB planner, the collision rate decreases substan-
+monly encountered in indoor environments:                                               tially from 30% to 14%, while the success rate remains high
+   • Corridor head-on encounter: a pedestrian approaches                                (96% vs. 100%). Similarly, for MPPI, the collision rate is
+      directly in a narrow corridor, requiring reciprocal avoid-                        reduced from 20% to 10%, and the success rate improves
+      ance.                                                                             from 80% to 100%. These improvements occur because the
+   • Overtaking: the robot approaches a slower pedestrian                               learned social cost penalizes trajectories that pass too close to
+      moving in the same direction.                                                     pedestrians, encouraging the planners to select safer motion
+   • Crossing at an intersection: a pedestrian crosses or-                              commands.
+      thogonally, creating a potential trajectory conflict.                                Compared to the learning-based DRLVO baseline, which
+   • Doorway bottleneck: a narrow passage requiring careful                             achieves a success rate of 83.3% with a collision rate
+      spacing and timing to avoid congestion.                                           of 25%, both DWB and MPPI with SocialWalker achieve
+   • Group blocking: multiple pedestrians partially obstruct                            higher success rates while significantly reducing collisions.
+      the robot’s path, requiring detouring or adaptive naviga-                         This suggests that the proposed social cost can effectively
+      tion.                                                                             enhance traditional planners without requiring a fully learned
+   Each scenario is instantiated in the Arena environment                               navigation policy.
+with controlled pedestrian initializations to generate consistent                          While SocialWalker slightly increases the navigation time
+interaction patterns. For statistical robustness, each plan-                            for MPPI, this reflects safer and more socially compliant nav-
+ner–scenario combination is evaluated over 30 randomized                                igation, as the planner prioritizes maintaining larger distances
+trials with varying pedestrian velocities and spawn positions.                          from pedestrians during interactions. Overall, these results
+      c) Evaluation Metrics: Performance is evaluated using                             demonstrate that SocialWalker improves navigation safety and
+both task-level and social compliance metrics. Task-level                               social compliance without significantly compromising task
+metrics include success rate, collision rate, time-to-goal, and                         efficiency.
+path length. Social compliance metrics include minimum                                     2) Social Compliance Metrics: Table II evaluates the
+human distance, intrusion ratio (the percentage of time the                             social compliance of different planners. Overall, SocialWalker
+robot remains within 0.8 m of pedestrians), and intrusion time.                         improves socially aware navigation by increasing the minimum
+Unless otherwise specified, the weighting parameter 𝛼 is set                            distance to pedestrians and reducing both intrusion ratio and
+to 100 in all experiments. This value was selected empirically                          intrusion time.
+through validation experiments to balance the influence of the                             For the DWB planner, the minimum distance increases from
+learned social cost with the geometric and goal-related costs                           0.33 m to 0.40 m, while the intrusion ratio decreases from 17%
+in the planner.                                                                         to 8.7% and the intrusion time decreases from 9.7 s to 6.1 s.
+                                                                                        This indicates that the robot maintains larger safety distances
+B. Results Analysis                                                                     and spends less time inside pedestrians’ personal space when
+Fig. 5: Qualitative comparison between the baseline planner (DWB) and DWB + SocialWalker (ours) in representative human–robot interaction scenarios.
+Top: predicted local trajectories in the robot frame. Bottom: corresponding environment views in the simulator. Scenarios include (a) group blocking, (b)
+doorway bottleneck, and (c) crossing intersection. Compared with the baseline planner, SocialWalker generates trajectories that maintain larger distances
+from pedestrians and avoid close interactions in crowded or constrained environments. These qualitative behaviors are consistent with the quantitative
+improvements in minimum distance, intrusion ratio, and collision rates reported in Tables II and III.
+
+
+TABLE III: Scenario-Based Evaluation under Structured Human-Robot
+Interactions (averaged over DWB and MPPI).                                                           pedestrians in narrow corridors.
+ Scenario                   Method        Collision (%) ↓   Min Dist (m) ↑   Intrusion Ratio (%) ↓
+                                                                                                        In the overtaking scenario, the baseline planner often
+ Corridor (Head-on)         Baseline
+                         + SocialWalker
+                                                  0
+                                                  0
+                                                                0.39
+                                                                0.48
+                                                                                       14
+                                                                                        7
+                                                                                                     passes pedestrians with minimal clearance (0.16 m), leading to
+ Overtaking                 Baseline             50             0.16                  6.7            frequent personal space violations. In contrast, SocialWalker
+                         + SocialWalker          45             0.32                  2.4
+ Intersection Crossing      Baseline              0             0.72                    3            encourages wider overtaking trajectories (0.32 m), reducing
+                         + SocialWalker           0             0.75                    1
+ Doorway Bottleneck         Baseline             90             0.10                   55            the intrusion ratio from 6.7% to 2.4% and slightly lowering
+                         + SocialWalker          10             0.45                   22
+ Group Blocking             Baseline              5             0.28                   22            the collision rate from 50% to 45%.
+                         + SocialWalker           0             0.45                   12
+                                                                                                        In the intersection crossing scenario, SocialWalker main-
+                                                                                                     tains larger safety margins even when collisions are not present.
+                                                                                                     The minimum distance increases from 0.72 m to 0.75 m, while
+SocialWalker is applied.                                                                             the intrusion ratio decreases from 3% to 1%.
+   For MPPI, SocialWalker reduces the intrusion ratio from                                              The largest improvement occurs in the doorway bottleneck
+14.1% to 5.6%, demonstrating that the robot avoids entering                                          scenario, where the narrow geometry forces close interactions
+pedestrian personal space more effectively. Although the                                             between the robot and pedestrians. The baseline planner fre-
+minimum distance slightly decreases from 0.46 m to 0.43 m,                                           quently attempts to pass through the doorway simultaneously
+the intrusion ratio and intrusion time are significantly reduced,                                    with pedestrians, resulting in extremely high collision (90%)
+indicating improved interaction behavior.                                                            and intrusion (55%) rates. In contrast, SocialWalker promotes
+   These results suggest that the learned social cost discourages                                    trajectories that maintain larger distances from pedestrians,
+trajectories that violate pedestrian personal space, leading to                                      reducing collisions to 10% and increasing the minimum
+safer and more socially compliant navigation.                                                        distance to 0.45 m.
+   3) Scenario-Based Evaluation: Table III provides a                                                   Finally, in the group blocking scenario, SocialWalker guides
+scenario-level analysis to better understand robot behavior                                          the robot to navigate around pedestrian groups rather than
+under different human–robot interaction patterns.                                                    attempting to pass through narrow gaps. As a result, collisions
+   In the corridor (head-on) scenario, both methods avoid                                            are reduced from 5% to 0%, while the minimum distance
+collisions. However, SocialWalker increases the passing dis-                                         increases from 0.28 m to 0.45 m.
+tance from 0.39 m to 0.48 m and reduces the intrusion ratio                                             Overall, these results demonstrate that SocialWalker im-
+from 14% to 7%. This indicates that the robot maintains a                                            proves socially compliant navigation by encouraging safer tra-
+larger interpersonal distance when encountering oncoming                                             jectory selection, maintaining larger interpersonal distances,
+and reducing collision risks across diverse human–robot                                            References
+interaction scenarios.
+   4) Qualitative Results: Figure 5 presents qualitative com-        [1] D. Helbing and P. Molnar, “Social force model for pedestrian dynamics,”
+                                                                         Physical review E, vol. 51, no. 5, p. 4282, 1995.
+parisons between the baseline planner (DWB) and our method           [2] T. Kruse, A. K. Pandey, R. Alami, and A. Kirsch, “Human-aware robot
+(DWB + SocialWalker) in representative social navigation                 navigation: A survey,” Robotics and Autonomous Systems, vol. 61,
+scenarios. The top row shows the predicted local trajectories            no. 12, pp. 1726–1743, 2013.
+                                                                     [3] D. Fox, W. Burgard, and S. Thrun, “The dynamic window approach to
+generated by the planner, while the bottom row illustrates the           collision avoidance,” IEEE robotics & automation magazine, vol. 4,
+corresponding environment views in the simulator.                        no. 1, pp. 23–33, 2002.
+   In the group blocking scenario (Fig. 5a), multiple pedestri-      [4] C. Rösmann, W. Feiten, T. Wösch, F. Hoffmann, and T. Bertram,
+                                                                         “Efficient trajectory optimization using a sparse model,” in 2013
+ans obstruct the robot’s direct path. The baseline planner tends         European conference on mobile robots. IEEE, 2013, pp. 138–143.
+to generate trajectories that pass close to the pedestrian group.    [5] A. Francis, C. Pérez-d’Arpino, C. Li, F. Xia, A. Alahi, R. Alami, A. Bera,
+In contrast, SocialWalker encourages the robot to steer around           A. Biswas, J. Biswas, R. Chandra et al., “Principles and guidelines for
+the group and maintain larger distances from pedestrians,                evaluating social robot navigation algorithms,” ACM Transactions on
+                                                                         Human-Robot Interaction, vol. 14, no. 2, pp. 1–65, 2025.
+which aligns with the reduced collision rate and intrusion ratio     [6] B. Ikeda, M. Higger, C. S. Song, and J. G. Trafton, “Overlapping social
+observed in Table III.                                                   navigation principles: a framework for social robot navigation,” in 2025
+   In the doorway bottleneck scenario (Fig. 5b), the robot               IEEE International Conference on Robotics and Automation (ICRA).
+                                                                         IEEE, 2025, pp. 10 439–10 447.
+must pass through a narrow passage shared with pedestrians.          [7] H. Kretzschmar, M. Spies, C. Sprunk, and W. Burgard, “Socially
+The baseline planner often generates trajectories that move              compliant mobile robot navigation via inverse reinforcement learning,”
+directly through the doorway with minimal clearance, which               The International Journal of Robotics Research, vol. 35, no. 11, pp.
+                                                                         1289–1307, 2016.
+frequently leads to collisions. By contrast, SocialWalker            [8] Y. F. Chen, M. Everett, M. Liu, and J. P. How, “Socially aware
+promotes trajectories that maintain larger safety margins,               motion planning with deep reinforcement learning,” in 2017 IEEE/RSJ
+resulting in fewer collisions and significantly larger minimum           International Conference on Intelligent Robots and Systems (IROS).
+                                                                         IEEE, 2017, pp. 1343–1350.
+distances.                                                           [9] C. Chen, Y. Liu, S. Kreiss, and A. Alahi, “Crowd-robot interaction:
+   In the crossing intersection scenario (Fig. 5c), pedestrian           Crowd-aware robot navigation with attention-based deep reinforcement
+motion intersects with the robot’s path. SocialWalker guides             learning,” in 2019 international conference on robotics and automation
+                                                                         (ICRA). IEEE, 2019, pp. 6015–6022.
+the planner to select trajectories that avoid close interactions
+                                                                    [10] W. Kay, J. Carreira, K. Simonyan, B. Zhang, C. Hillier, S. Vijaya-
+with pedestrians while still progressing toward the goal,                narasimhan, F. Viola, T. Green, T. Back, P. Natsev et al., “The kinetics
+leading to safer and more socially compliant navigation.                 human action video dataset,” arXiv preprint arXiv:1705.06950, 2017.
+   Overall, these qualitative examples illustrate that Social-      [11] R. Goyal, S. Ebrahimi Kahou, V. Michalski, J. Materzynska, S. Westphal,
+                                                                         H. Kim, V. Haenel, I. Fruend, P. Yianilos, M. Mueller-Freitag et al.,
+Walker encourages safer trajectory selection and maintains               “The” something something” video database for learning and evaluating
+larger interpersonal distances. This behavior is consistent with         visual common sense,” in Proceedings of the IEEE international
+the quantitative improvements in minimum distance, intrusion             conference on computer vision, 2017, pp. 5842–5850.
+                                                                    [12] S. Levine, C. Finn, T. Darrell, and P. Abbeel, “End-to-end training of
+ratio, and collision rates reported in Tables II and III.                deep visuomotor policies,” Journal of Machine Learning Research,
+                                                                         vol. 17, no. 39, pp. 1–40, 2016.
+                       V. Conclusion                                [13] J. Tobin, R. Fong, A. Ray, J. Schneider, W. Zaremba, and P. Abbeel,
+                                                                         “Domain randomization for transferring deep neural networks from sim-
+   We presented SocialWalker, a plug-and-play social com-                ulation to the real world,” in 2017 IEEE/RSJ international conference
+pliance module that learns a trajectory-level social cost                on intelligent robots and systems (IROS). IEEE, 2017, pp. 23–30.
+directly from large-scale human walking videos. By mining           [14] Z. Teed, L. Lipson, and J. Deng, “Deep patch visual odometry,” Advances
+ego motion and pedestrian interaction cues from web-scale                in Neural Information Processing Systems, vol. 36, pp. 39 033–39 051,
+                                                                         2023.
+data, SocialWalker learns socially grounded navigation priors       [15] A. Rudenko, L. Palmieri, M. Herman, K. M. Kitani, D. M. Gavrila,
+without requiring manual social annotations or handcrafted               and K. O. Arras, “Human motion trajectory prediction: A survey,” The
+rules. The learned social cost can be seamlessly integrated              International Journal of Robotics Research, vol. 39, no. 8, pp. 895–935,
+                                                                         2020.
+into classical and learning-based local planners through a sim-     [16] J. Van Den Berg, S. J. Guy, M. Lin, and D. Manocha, “Reciprocal n-
+ple minimum-cost selection scheme, without modifying the                 body collision avoidance,” in Robotics research: the 14th international
+underlying planner architecture. Extensive evaluation across             symposium ISRR. Springer, 2011, pp. 3–19.
+                                                                    [17] Y. F. Chen, M. Liu, M. Everett, and J. P. How, “Decentralized non-
+multiple planners demonstrates that SocialWalker significantly           communicating multiagent collision avoidance with deep reinforcement
+reduces collision rates and intrusion behaviors while pre-               learning,” in 2017 IEEE international conference on robotics and
+serving navigation success and efficiency. Improvements are              automation (ICRA). IEEE, 2017, pp. 285–292.
+                                                                    [18] L. Kästner, T. Buiyan, L. Jiao, T. A. Le, X. Zhao, Z. Shen, and J. Lam-
+consistent across structured interaction scenarios, including            brecht, “Arena-rosnav: Towards deployment of deep-reinforcement-
+head-on encounters, overtaking, intersections, bottlenecks, and          learning-based obstacle avoidance into conventional autonomous nav-
+group blocking. These results demonstrate the potential of               igation systems,” in 2021 IEEE/RSJ International Conference on
+                                                                         Intelligent Robots and Systems (IROS). IEEE, 2021, pp. 6456–6463.
+leveraging large-scale internet videos as a scalable source of
+                                                                    [19] M. Everett, Y. F. Chen, and J. P. How, “Motion planning among dynamic,
+supervision for socially aware robot navigation. In future work,         decision-making agents with deep reinforcement learning,” in 2018
+we aim to extend SocialWalker to real-world robotic platforms            IEEE/RSJ International Conference on Intelligent Robots and Systems
+and investigate adaptive social weighting mechanisms that                (IROS). IEEE, 2018, pp. 3052–3059.
+                                                                    [20] A. Francis, A. Faust, H.-T. L. Chiang, J. Hsu, J. C. Kew, M. Fiser,
+dynamically adjust social sensitivity based on environmental             and T.-W. E. Lee, “Long-range indoor navigation with prm-rl,” IEEE
+context and crowd density.                                               Transactions on Robotics, vol. 36, no. 4, pp. 1115–1134, 2020.
+[21] M. Pfeiffer, S. Shukla, M. Turchetta, C. Cadena, A. Krause, R. Siegwart,     obstacle avoidance,” in 2016 IEEE/RSJ international conference on
+     and J. Nieto, “Reinforced imitation: Sample efficient deep reinforcement     intelligent robots and systems (IROS). IEEE, 2016, pp. 2759–2764.
+     learning for mapless navigation by leveraging prior demonstrations,”
+     IEEE Robotics and Automation Letters, vol. 3, no. 4, pp. 4423–4430,
+     2018.
+[22] T. Kathuria, K. Liu, J. Jang, X. J. Yang, and M. Ghaffari, “Learning
+     implicit social navigation behavior using deep inverse reinforcement
+     learning,” IEEE Robotics and Automation Letters, 2025.
+[23] Y. U. Ciftci, D. Chiu, Z. Feng, G. S. Sukhatme, and S. Bansal, “Safe-
+     gil: Safety guided imitation learning for robotic systems,” in 2025 IEEE
+     International Conference on Robotics and Automation (ICRA). IEEE,
+     2025, pp. 3559–3566.
+[24] N. Hirose, D. Shah, A. Sridhar, and S. Levine, “Sacson: Scalable au-
+     tonomous control for social navigation,” IEEE Robotics and Automation
+     Letters, vol. 9, no. 1, pp. 49–56, 2023.
+[25] Z. Xu, H.-T. L. Chiang, Z. Fu, M. G. Jacob, T. Zhang, T.-W. E. Lee, W. Yu,
+     C. Schenck, D. Rendleman, D. Shah et al., “Mobility vla: Multimodal
+     instruction navigation with long-context vlms and topological graphs,”
+     in 8th Annual Conference on Robot Learning.
+[26] D. Song, J. Liang, A. Payandeh, A. H. Raj, X. Xiao, and D. Manocha,
+     “Vlm-social-nav: Socially aware robot navigation through scoring
+     using vision-language models,” IEEE Robotics and Automation Letters,
+     vol. 10, no. 1, pp. 508–515, 2024.
+[27] N. Hirose, C. Glossop, D. Shah, and S. Levine, “Asyncvla: An
+     asynchronous vla for fast and robust navigation on the edge,” arXiv
+     preprint arXiv:2602.13476, 2026.
+[28] Z. Huang, Y. Zhang, J. Liu, R. Song, C. Tang, and J. Ma, “Tic-vla: A
+     think-in-control vision-language-action model for robot navigation in
+     dynamic environments,” arXiv preprint arXiv:2602.02459, 2026.
+[29] P. Ding, H. Zhao, W. Zhang, W. Song, M. Zhang, S. Huang, N. Yang,
+     and D. Wang, “Quar-vla: Vision-language-action model for quadruped
+     robots,” in European Conference on Computer Vision. Springer, 2024,
+     pp. 352–367.
+[30] A. Bar, G. Zhou, D. Tran, T. Darrell, and Y. LeCun, “Navigation
+     world models,” in Proceedings of the Computer Vision and Pattern
+     Recognition Conference, 2025, pp. 15 791–15 801.
+[31] A. Alahi, K. Goel, V. Ramanathan, A. Robicquet, L. Fei-Fei, and
+     S. Savarese, “Social lstm: Human trajectory prediction in crowded
+     spaces,” in Proceedings of the IEEE conference on computer vision
+     and pattern recognition, 2016, pp. 961–971.
+[32] A. Gupta, J. Johnson, L. Fei-Fei, S. Savarese, and A. Alahi, “Social gan:
+     Socially acceptable trajectories with generative adversarial networks,”
+     in Proceedings of the IEEE conference on computer vision and pattern
+     recognition, 2018, pp. 2255–2264.
+[33] Y. Mei, Y. Yang, L. Guo, Q. Wang, M.-M. Yu, X. He, W. Wu, and J. Liu,
+     “Urbannav: Learning language-guided urban navigation from web-scale
+     human trajectories,” arXiv preprint arXiv:2512.09607, 2025.
+[34] X. Liu, J. Li, Y. Jiang, N. Sujay, Z. Yang, J. Zhang, J. Abanes, J. Zhang,
+     and C. Feng, “Citywalker: Learning embodied urban navigation from
+     web-scale videos,” in Proceedings of the Computer Vision and Pattern
+     Recognition Conference, 2025, pp. 6875–6885.
+[35] A. Y. Ng, S. Russell et al., “Algorithms for inverse reinforcement
+     learning.” in Icml, vol. 1, no. 2, 2000, p. 2.
+[36] B. D. Ziebart, A. L. Maas, J. A. Bagnell, A. K. Dey et al., “Maximum
+     entropy inverse reinforcement learning.” in Aaai, vol. 8. Chicago, IL,
+     USA, 2008, pp. 1433–1438.
+[37] N. D. Ratliff, J. A. Bagnell, and M. A. Zinkevich, “Maximum margin
+     planning,” in Proceedings of the 23rd international conference on
+     Machine learning, 2006, pp. 729–736.
+[38] A. Wang, H. Chen, L. Liu, K. Chen, Z. Lin, J. Han et al., “Yolov10:
+     Real-time end-to-end object detection,” Advances in neural information
+     processing systems, vol. 37, pp. 107 984–108 011, 2024.
+[39] L. Yang, B. Kang, Z. Huang, Z. Zhao, X. Xu, J. Feng, and H. Zhao,
+     “Depth anything v2,” Advances in Neural Information Processing
+     Systems, vol. 37, pp. 21 875–21 911, 2024.
+[40] L. Kästner, V. Shcherbyna, H. Zeng, T. A. Le, M. H.-K. Schreff,
+     H. Osmaev, N. T. Tran, D. Diaz, J. Golebiowski, H. Soh et al., “Arena
+     3.0: Advancing social navigation in collaborative and highly dynamic
+     environments,” arXiv preprint arXiv:2406.00837, 2024.
+[41] G. Williams, P. Drews, B. Goldfain, J. M. Rehg, and E. A. Theodorou,
+     “Information-theoretic model predictive control: Theory and applica-
+     tions to autonomous driving,” IEEE Transactions on Robotics, vol. 34,
+     no. 6, pp. 1603–1622, 2018.
+[42] L. Tai, S. Li, and M. Liu, “A deep-network solution towards model-less
+

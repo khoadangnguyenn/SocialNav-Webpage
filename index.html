@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+    content="SocialWalker: A framework that learns a social compliance cost from large-scale human walking videos for plug-and-play robot navigation in crowded environments.">
+  <meta name="keywords"
+    content="Social Navigation, Robot Navigation, Social Compliance, Human Walking Videos, Trajectory Ranking, Plug-and-Play, Deep Learning">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Social Walker: Learning a Social Compliance Cost from Web-Scale Human Walking Videos for Plug-and-Play Robot
+    Navigation</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="https://unpkg.com/aos@2.3.4/dist/aos.css">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/social-nav-vlm.css">
+
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+  <script src="https://unpkg.com/aos@2.3.4/dist/aos.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script defer src="./static/js/social-nav-vlm.js"></script>
+</head>
+
+<body>
+
+  <canvas id="particle-canvas"></canvas>
+
+  <nav id="floating-nav" class="floating-nav">
+    <a href="#hero-section" class="nav-dot active" data-tooltip="Title">
+      <span class="nav-tooltip">Title</span>
+    </a>
+    <a href="#abstract-section" class="nav-dot" data-tooltip="Abstract">
+      <span class="nav-tooltip">Abstract</span>
+    </a>
+    <a href="#results-section" class="nav-dot" data-tooltip="Results">
+      <span class="nav-tooltip">Results</span>
+    </a>
+    <a href="#overview-section" class="nav-dot" data-tooltip="Overview">
+      <span class="nav-tooltip">Overview</span>
+    </a>
+    <a href="#comparison-section" class="nav-dot" data-tooltip="Baselines">
+      <span class="nav-tooltip">Baselines</span>
+    </a>
+    <a href="#tables-section" class="nav-dot" data-tooltip="Tables">
+      <span class="nav-tooltip">Tables</span>
+    </a>
+    <a href="#conclusion-section" class="nav-dot" data-tooltip="Conclusion">
+      <span class="nav-tooltip">Conclusion</span>
+    </a>
+    <a href="#BibTeX" class="nav-dot" data-tooltip="BibTeX">
+      <span class="nav-tooltip">BibTeX</span>
+    </a>
+  </nav>
+
+  <section class="hero" id="hero-section">
+    <div class="hero-body">
+      <div class="container is-max-widescreen">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <div class="conference-badge" data-aos="fade-down" data-aos-duration="200">
+              <span>CoRL 2026</span>
+            </div>
+
+            <h1 id="paper-title" class="title is-1 publication-title">
+              Social Walker: Learning a Social Compliance Cost from Web-Scale Human Walking Videos for Plug-and-Play
+              Robot Navigation
+            </h1>
+
+            <div class="is-size-5 publication-authors" data-aos="fade-up" data-aos-delay="200">
+              <span class="author-block">
+                <a href="https://your-website.com">Author One</a><sup>1</sup>,</span>
+              <span class="author-block">
+                <a href="https://your-website.com">Author Two</a><sup>1</sup>,</span>
+              <span class="author-block">
+                <a href="https://your-website.com">Author Three</a><sup>2</sup>
+              </span>
+            </div>
+
+            <div class="is-size-5 publication-authors affiliations" data-aos="fade-up" data-aos-delay="300">
+              <span class="author-block"><sup>1</sup>University A,</span>
+              <span class="author-block"><sup>2</sup>University B</span>
+            </div>
+
+            <div class="column has-text-centered" data-aos="fade-up" data-aos-delay="400">
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark btn-paper">
+                    <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                    </span>
+                    <span>PDF</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark btn-arxiv">
+                    <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                    </span>
+                    <span>arXiv</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark btn-youtube">
+                    <span class="icon">
+                      <i class="fab fa-youtube"></i>
+                    </span>
+                    <span>Video</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark btn-code">
+                    <span class="icon">
+                      <i class="fab fa-github"></i>
+                    </span>
+                    <span>Code</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero teaser">
+    <div class="container is-max-widescreen">
+      <div class="hero-body" data-aos="zoom-in" data-aos-duration="200">
+        <div class="custom-carousel" id="teaser-carousel">
+          <div class="carousel-track">
+            <div class="carousel-slide active">
+              <div class="teaser-image-wrapper">
+                <img src="./static/images/overview_paper.png" alt="Teaser figure 1">
+                <div class="image-glow"></div>
+              </div>
+              <div class="columns is-centered mt-4">
+                <div class="column is-11">
+                  <h2 class="subtitle has-text-centered is-6">
+                    <strong>Figure 1.</strong> Overview of SocialWalker. Web-scale human walking videos are
+                    used to extract ego trajectories and pedestrian interaction cues.
+                  </h2>
+                </div>
+              </div>
+            </div>
+            <div class="carousel-slide">
+              <div class="teaser-image-wrapper">
+                <img src="./static/images/overview_architecture.png" alt="SocialWalker Framework Overview">
+                <div class="image-glow"></div>
+              </div>
+              <div class="columns is-centered mt-4">
+                <div class="column is-11">
+                  <h2 class="subtitle has-text-centered is-6">
+                    <strong>Figure 2.</strong> Overview of the SocialWalker framework: Data Preparation extracts ego
+                    trajectories and pedestrian features. Training uses ranking-based learning. Deployment integrates
+                    the learned cost in a plug-and-play manner.
+                  </h2>
+                </div>
+              </div>
+            </div>
+            <div class="carousel-slide">
+              <div class="teaser-image-wrapper">
+                <img src="./static/images/example_result.png" alt="Qualitative Comparison">
+                <div class="image-glow"></div>
+              </div>
+              <div class="columns is-centered mt-4">
+                <div class="column is-11">
+                  <h2 class="subtitle has-text-centered is-6">
+                    <strong>Figure 3.</strong> Qualitative comparison between baseline DWB and DWB + SocialWalker in
+                    scenarios: group blocking, doorway bottleneck, and crossing intersection.
+                  </h2>
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="carousel-btn carousel-btn-prev" aria-label="Previous slide">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="carousel-btn carousel-btn-next" aria-label="Next slide">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+          <div class="carousel-indicators">
+            <span class="carousel-dot active" data-index="0"></span>
+            <span class="carousel-dot" data-index="1"></span>
+            <span class="carousel-dot" data-index="2"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="abstract-section">
+    <div class="container is-max-widescreen">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <div class="section-header" data-aos="fade-up">
+            <span class="section-label">01</span>
+            <h2 class="title is-3">Abstract</h2>
+            <div class="section-divider"></div>
+          </div>
+          <div class="content has-text-justified glass-card" data-aos="fade-up" data-aos-delay="150">
+            <p>
+              Robots navigating in crowded environments must exhibit socially compliant behavior, yet designing explicit
+              social cost functions remains challenging due to the complexity and variability of human interactions.
+            </p>
+            <p>
+              We present SocialWalker, a framework that learns a social compliance cost directly from large-scale human
+              walking videos without requiring manual social annotations or robot-collected interaction data. Our
+              approach extracts ego trajectories and pedestrian proximity cues from internet videos to construct an
+              ego-centric representation of social navigation. By treating the observed human trajectory as expert
+              behavior and perturbed trajectories as negatives, we train a temporal ranking model to estimate a social
+              compliance score for candidate robot trajectories.
+            </p>
+            <p>
+              At deployment, the learned social cost is integrated into a classical navigation stack through a
+              plug-and-play min-cost selection scheme that combines goal cost, geometric cost, and the learned social
+              cost. Experiments in the Arena simulation framework show that SocialWalker significantly reduces collision
+              rates and improves social compliance metrics while maintaining comparable navigation efficiency. These
+              results demonstrate the potential of leveraging large-scale human video data as a scalable source of
+              supervision for socially aware robot navigation.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-11">
+          <div class="section-header" data-aos="fade-up">
+            <span class="section-label">02</span>
+            <h2 class="title is-3">Video</h2>
+            <div class="section-divider"></div>
+          </div>
+          <div class="publication-video" data-aos="zoom-in-up" data-aos-duration="200">
+            <p class="has-text-centered mb-4" style="color: #8a8f98;">(Insert robot navigation demo video here)</p>
+            <video controls autoplay loop muted playsinline
+              style="width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0;">
+              <source src="./static/video/socialwalker_demo.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero is-small results-showcase" id="results-section">
+    <div class="hero-body">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-11">
+          <div class="section-header" data-aos="fade-up">
+            <span class="section-label">03</span>
+            <h2 class="title is-3">Interaction Scenarios</h2>
+            <div class="section-divider"></div>
+          </div>
+        </div>
+      </div>
+      <div class="container is-max-widescreen" data-aos="fade-up" data-aos-delay="200">
+        <div class="results-grid">
+          <div class="result-item">
+            <img src="./static/images/doorway-bottleneck.png" alt="Result 1">
+            <p class="caption"><strong>Scenario 1: Doorway Bottleneck</strong><br>In narrow passages that force close
+              interactions between robots and humans, SocialWalker encourages trajectories that maintain a larger
+              distance from pedestrians, reducing the collision rate from 90% to 10%.</p>
+          </div>
+          <div class="result-item">
+            <img src="./static/images/group-blocking.png" alt="Result 2">
+            <p class="caption"><strong>Scenario 2: Group Blocking</strong><br>Instead of attempting to squeeze through
+              narrow gaps within a group of pedestrians, SocialWalker guides the robot to navigate around the group. As
+              a result, collisions are reduced from 5% to 0%.</p>
+          </div>
+          <div class="result-item">
+            <img src="./static/images/crossing-intersection.png" alt="Result 3">
+            <p class="caption"><strong>Scenario 3: Intersection Crossing</strong><br>When a pedestrian's trajectory
+              intersects the robot's path, SocialWalker maintains a larger safety margin. The minimum safety distance
+              increases from 0.72 m to 0.75 m, while the intrusion ratio decreases from 3% to 1%.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="overview-section">
+    <div class="container is-max-widescreen">
+      <div class="columns is-centered has-text-centered">
+        <div class="column">
+          <div class="section-header" data-aos="fade-up">
+            <span class="section-label">04</span>
+            <h2 class="title is-3">Overview</h2>
+            <div class="section-divider"></div>
+          </div>
+          <div class="overview-figure" data-aos="zoom-in" data-aos-duration="200">
+            <div class="overview-image-wrapper">
+              <img id="overview" src="./static/images/overview_architecture.png" alt="Method Overview">
+            </div>
+            <h2 class="subtitle has-text-centered is-7" data-aos="fade-up" data-aos-delay="100">
+              <strong>Figure 2: Overview of the SocialWalker framework.</strong> <em>Data Preparation:</em> Web-scale
+              human walking videos are processed to extract ego trajectories and pedestrian proximity features via
+              visual odometry, detection, and depth estimation. <em>Training:</em> A temporal encoder learns a social
+              compliance cost by ranking expert trajectories against augmented negative trajectories.
+              <em>Deployment:</em> The learned cost is integrated into a classical navigation stack in a plug-and-play
+              manner.
+            </h2>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container is-max-widescreen" style="margin-top:2rem;">
+      <div class="columns is-multiline" data-aos="fade-up">
+        <div class="column is-half">
+          <div class="comparison-card">
+            <h4 class="title is-5" style="color:var(--primary-600);">Data Preparation</h4>
+            <div class="content has-text-justified">
+              <p>We curate 5,000 video clips from publicly available egocentric walking footage
+                (tourist vlogs, street-level recordings). Videos are sampled at 1 FPS. Ego trajectories are estimated
+                using DPVO, pedestrians detected via YOLOv10, and monocular depth
+                estimated with DepthAnything V2.</p>
+            </div>
+          </div>
+        </div>
+        <div class="column is-half">
+          <div class="comparison-card">
+            <h4 class="title is-5" style="color:var(--primary-600);">Ego-Centric State</h4>
+            <div class="content has-text-justified">
+              <p>We model the interaction context using an ego motion history (8 past timesteps) and top-K
+                closest pedestrian observations including bounding-box center, height, and estimated depth.
+                If fewer than K pedestrians are detected, zero-padding is applied.</p>
+            </div>
+          </div>
+        </div>
+        <div class="column is-half">
+          <div class="comparison-card">
+            <h4 class="title is-5" style="color:var(--primary-600);">Social Cost Learning</h4>
+            <div class="content has-text-justified">
+              <p>The observed human trajectory serves as the expert (positive), while 16 perturbed
+                trajectories act as negatives. A temporal encoder (GRU + MLP) is trained via a listwise ranking
+                objective to assign lower cost to socially compliant trajectories.
+                This yields ~300K trajectory windows for training.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="column is-half">
+          <div class="comparison-card">
+            <h4 class="title is-5" style="color:var(--primary-600);">Plug-and-Play Deployment</h4>
+            <div class="content has-text-justified">
+              <p>At deployment, the learned social cost is injected as an additive term into the
+                planner's trajectory scoring. The trajectory with minimum combined cost (goal + geometric + α·social) is
+                selected — no planner modifications needed.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero is-small results-showcase" id="steps-section">
+    <div class="hero-body">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-11">
+          <div class="section-header" data-aos="fade-up">
+            <span class="section-label">05</span>
+            <h2 class="title is-3">Visualization</h2>
+            <div class="section-divider"></div>
+          </div>
+        </div>
+      </div>
+      <div class="container is-max-widescreen" data-aos="fade-up" data-aos-delay="200">
+        <div class="custom-carousel" id="steps-carousel">
+          <div class="carousel-track">
+            <div class="carousel-slide active">
+              <div class="step-card">
+                <p class="step-label">Arena Environment</p>
+                <img src="./static/images/arena-simulation.png" alt="Step 1">
+                <blockquote class="step-description">
+                  Hospital floor layout used in our experiments within the Arena simulation framework.
+                </blockquote>
+              </div>
+            </div>
+            <div class="carousel-slide">
+              <div class="step-card">
+                <p class="step-label">Training Sample Construction</p>
+                <img src="./static/images/training_sample.png" alt="Step 2">
+                <blockquote class="step-description">
+                  Training sample construction from human walking videos.
+                </blockquote>
+              </div>
+            </div>
+          </div>
+          <button class="carousel-btn carousel-btn-prev" aria-label="Previous slide">
+            <i class="fas fa-chevron-left"></i>
+          </button>
+          <button class="carousel-btn carousel-btn-next" aria-label="Next slide">
+            <i class="fas fa-chevron-right"></i>
+          </button>
+          <div class="carousel-indicators">
+            <span class="carousel-dot active" data-index="0"></span>
+            <span class="carousel-dot" data-index="1"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="comparison-section">
+    <div class="container is-max-widescreen">
+      <div class="section-header has-text-centered" data-aos="fade-up">
+        <span class="section-label">06</span>
+        <h2 class="title is-3">Baseline Comparisons</h2>
+        <div class="section-divider" style="margin-left:auto;margin-right:auto;"></div>
+      </div>
+      <div class="columns is-centered">
+        <div class="column" data-aos="fade-right" data-aos-delay="100">
+          <div class="comparison-card">
+            <h2 class="title is-4">DWB: Dynamic Window Based planner</h2>
+            <div class="content has-text-justified">
+              <p>
+                The baseline DWB planner typically prioritizes path
+                length and purely geometric costs. However, in narrow environments like doorways (doorway bottleneck),
+                DWB often attempts to pass alongside pedestrians at very close proximity, leading to a collision rate of
+                up to 90% and a personal space intrusion ratio of 55%.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="column" data-aos="fade-up" data-aos-delay="200">
+          <div class="comparison-card">
+            <h2 class="title is-4">MPPI: Model Predictive Path Integral</h2>
+            <div class="content has-text-justified">
+              <p>
+                MPPI is a powerful model predictive controller based on
+                geometric costs. Nevertheless, without SocialWalker, MPPI's collision rate reaches 20%, and its success
+                rate is only 80%.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="column" data-aos="fade-left" data-aos-delay="300">
+          <div class="comparison-card">
+            <h2 class="title is-4">DRLVO: Deep-network solution for obstacle avoidance</h2>
+            <div class="content has-text-justified">
+              <p>
+                DRLVO is a learning-based planner.
+                However, it only achieves a success rate of 83.3% and has a relatively high collision rate of 25%,
+                indicating that it struggles to handle complex real-world interactions compared to integrating
+                SocialWalker into classical planners.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="tables-section">
+    <div class="container is-max-widescreen">
+      <div class="columns is-centered has-text-centered">
+        <div class="column">
+          <div class="section-header" data-aos="fade-up">
+            <span class="section-label">07</span>
+            <h2 class="title is-3">Results</h2>
+            <div class="section-divider"></div>
+          </div>
+        </div>
+      </div>
+      <div class="table-container" data-aos="fade-up" data-aos-delay="200">
+        <!-- Table 1 -->
+        <div class="table-card">
+          <table>
+            <caption><strong>Table 1: Overall Navigation Performance</strong></caption>
+            <thead>
+              <tr>
+                <th>Planner</th>
+                <th>Method</th>
+                <th>Success (%)</th>
+                <th>Collision (%)</th>
+                <th>Time (s)</th>
+                <th>Path (m)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>DRLVO</td>
+                <td>Baseline</td>
+                <td>83.3</td>
+                <td>25</td>
+                <td>127.2</td>
+                <td>34.8</td>
+              </tr>
+              <tr>
+                <td>DWB</td>
+                <td>Baseline</td>
+                <td>100</td>
+                <td>30</td>
+                <td>127.8</td>
+                <td>34.7</td>
+              </tr>
+              <tr>
+                <td>DWB</td>
+                <td><strong>SocialWalker</strong></td>
+                <td><strong>96</strong></td>
+                <td><strong>14</strong></td>
+                <td><strong>106.7</strong></td>
+                <td><strong>34.5</strong></td>
+              </tr>
+              <tr>
+                <td>MPPI</td>
+                <td>Baseline</td>
+                <td>80</td>
+                <td>20</td>
+                <td>93.6</td>
+                <td>29.7</td>
+              </tr>
+              <tr>
+                <td>MPPI</td>
+                <td><strong>SocialWalker</strong></td>
+                <td><strong>100</strong></td>
+                <td><strong>10</strong></td>
+                <td><strong>111.4</strong></td>
+                <td><strong>34.1</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table 2 -->
+        <div class="table-card mt-5">
+          <table>
+            <caption><strong>Table 2: Social Compliance Metrics</strong><br><small>(Higher minimum distance is better,
+                lower intrusion ratio and time are better)</small></caption>
+            <thead>
+              <tr>
+                <th>Planner</th>
+                <th>Method</th>
+                <th>Min Dist (m)</th>
+                <th>Intrusion Ratio (%)</th>
+                <th>Intrusion Time (s)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>DRLVO</td>
+                <td>Baseline</td>
+                <td>0.32</td>
+                <td>11.1</td>
+                <td>6.4</td>
+              </tr>
+              <tr>
+                <td>DWB</td>
+                <td>Baseline</td>
+                <td>0.33</td>
+                <td>17.0</td>
+                <td>9.7</td>
+              </tr>
+              <tr>
+                <td>DWB</td>
+                <td><strong>SocialWalker</strong></td>
+                <td><strong>0.40</strong></td>
+                <td><strong>8.7</strong></td>
+                <td><strong>6.1</strong></td>
+              </tr>
+              <tr>
+                <td>MPPI</td>
+                <td>Baseline</td>
+                <td>0.46</td>
+                <td>14.1</td>
+                <td>9.8</td>
+              </tr>
+              <tr>
+                <td>MPPI</td>
+                <td><strong>SocialWalker</strong></td>
+                <td><strong>0.43</strong></td>
+                <td><strong>5.6</strong></td>
+                <td><strong>7.1</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table 3 -->
+        <div class="table-card mt-5">
+          <table>
+            <caption><strong>Table 3: Interaction Scenario-Based Evaluation (Averaged over DWB and MPPI)</strong>
+            </caption>
+            <thead>
+              <tr>
+                <th>Scenario</th>
+                <th>Method</th>
+                <th>Collision (%)</th>
+                <th>Min Dist (m)</th>
+                <th>Intrusion Ratio (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td rowspan="2" style="vertical-align: middle;">Corridor (Head-on)</td>
+                <td>Baseline</td>
+                <td>0</td>
+                <td>0.39</td>
+                <td>14</td>
+              </tr>
+              <tr>
+                <td><strong>SocialWalker</strong></td>
+                <td><strong>0</strong></td>
+                <td><strong>0.48</strong></td>
+                <td><strong>7</strong></td>
+              </tr>
+              <tr>
+                <td rowspan="2" style="vertical-align: middle;">Overtaking</td>
+                <td>Baseline</td>
+                <td>50</td>
+                <td>0.16</td>
+                <td>6.7</td>
+              </tr>
+              <tr>
+                <td><strong>SocialWalker</strong></td>
+                <td><strong>45</strong></td>
+                <td><strong>0.32</strong></td>
+                <td><strong>2.4</strong></td>
+              </tr>
+              <tr>
+                <td rowspan="2" style="vertical-align: middle;">Intersection Crossing</td>
+                <td>Baseline</td>
+                <td>0</td>
+                <td>0.72</td>
+                <td>3</td>
+              </tr>
+              <tr>
+                <td><strong>SocialWalker</strong></td>
+                <td><strong>0</strong></td>
+                <td><strong>0.75</strong></td>
+                <td><strong>1</strong></td>
+              </tr>
+              <tr>
+                <td rowspan="2" style="vertical-align: middle;">Doorway Bottleneck</td>
+                <td>Baseline</td>
+                <td>90</td>
+                <td>0.10</td>
+                <td>55</td>
+              </tr>
+              <tr>
+                <td><strong>SocialWalker</strong></td>
+                <td><strong>10</strong></td>
+                <td><strong>0.45</strong></td>
+                <td><strong>22</strong></td>
+              </tr>
+              <tr>
+                <td rowspan="2" style="vertical-align: middle;">Group Blocking</td>
+                <td>Baseline</td>
+                <td>5</td>
+                <td>0.28</td>
+                <td>22</td>
+              </tr>
+              <tr>
+                <td><strong>SocialWalker</strong></td>
+                <td><strong>0</strong></td>
+                <td><strong>0.45</strong></td>
+                <td><strong>12</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="BibTeX">
+    <div class="container is-max-widescreen content">
+      <div class="section-header" data-aos="fade-up">
+        <span class="section-label">08</span>
+        <h2 class="title">BibTeX</h2>
+        <div class="section-divider"></div>
+      </div>
+      <div data-aos="fade-up" data-aos-delay="100">
+        <pre><code>@inproceedings{
+  socialwalker2024,
+  title={Social Walker: Learning a Social Compliance Cost from Web-Scale Human Walking Videos for Plug-and-Play Robot Navigation},
+  author={Author One, Author Two, Author Three},
+  booktitle={CoRL 2026},
+  year={2026},
+}
+</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="content has-text-centered">
+        <a class="icon-link" href="#">
+          <i class="fas fa-file-pdf"></i>
+        </a>
+        <a class="icon-link" href="#">
+          <i class="fab fa-github"></i>
+        </a>
+      </div>
+
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <h2 class="title is-4">Acknowledgement</h2>
+          <div class="content">
+            <p>
+              This website is adapted from <a rel="Nerfies" href="http://nerfies.github.io/">Nerfies</a>, licenced under
+              a <a rel="Creative Commons Attribution-ShareAlike 4.0 International License"
+                href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0
+                International License</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Back to Top Button -->
+  <button id="back-to-top" class="back-to-top" aria-label="Back to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+</body>
+
+</html>
